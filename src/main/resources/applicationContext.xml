@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xmlns:aop="http://www.springframework.org/schema/aop"
+       xmlns:tx="http://www.springframework.org/schema/tx"
+       xmlns:jpa="http://www.springframework.org/schema/data/jpa"
+       xmlns:task="http://www.springframework.org/schema/task"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+			http://www.springframework.org/schema/beans/spring-beans.xsd
+			http://www.springframework.org/schema/context
+			http://www.springframework.org/schema/context/spring-context.xsd
+			http://www.springframework.org/schema/aop
+    		http://www.springframework.org/schema/aop/spring-aop.xsd
+   			http://www.springframework.org/schema/tx
+        	http://www.springframework.org/schema/tx/spring-tx.xsd
+        	http://www.springframework.org/schema/data/jpa http://www.springframework.org/schema/data/jpa/spring-jpa.xsd
+        	http://www.springframework.org/schema/task http://www.springframework.org/schema/task/spring-task.xsd">
+    <!-- 配置JDBC参数 -->
+    <context:property-placeholder location="classpath:jdbc.properties" ignore-unresolvable="true"/>
+    <context:property-placeholder location="classpath:config.properties" ignore-unresolvable="true"/>
+    <!-- 配置连接池 -->
+    <bean id="dataSource" class="com.alibaba.druid.pool.DruidDataSource" init-method="init" destroy-method="close">
+        <property name="driverClassName" value="${jdbc.driver}"></property>
+        <property name="url" value="${jdbc.url}"></property>
+        <property name="username" value="${jdbc.name}"></property>
+        <property name="password" value="${jdbc.password}"></property>
+    </bean>
+    <!-- JPA实体管理工厂的配置,不再需要persistence.xml了 -->
+    <bean id="entityManagerFactory" class="org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean">
+        <property name="dataSource" ref="dataSource"/>
+        <property name="jpaVendorAdapter" ref="hibernateJpaVendorAdapter"/>
+        <!--待扫描的实体类包-->
+        <property name="packagesToScan" value="entity"/>
+        <property name="jpaProperties">
+            <props>
+                <!-- 实体和数据库映射规则 -->
+                <prop key="hibernate.ejb.naming_strategy">org.hibernate.cfg.ImprovedNamingStrategy</prop>
+                <!-- 是否在控制台打印sql语句 -->
+                <prop key="hibernate.show_sql">true</prop>
+                <!-- 是否格式化sql语句 -->
+                <prop key="hibernate.format_sql">true</prop>
+                <!-- 级联处理方式 -->
+                <prop key="hibernate.hbm2ddl.auto">none</prop>
+            </props>
+        </property>
+    </bean>
+    <!--指定实现JPA的适配器-->
+    <bean id="hibernateJpaVendorAdapter" class="org.springframework.orm.jpa.vendor.HibernateJpaVendorAdapter">
+        <property name="databasePlatform" value="org.hibernate.dialect.MySQLDialect" />
+    </bean>
+
+    <!-- 配置JPA事务管理类 -->
+    <bean id="transactionManager" class="org.springframework.orm.jpa.JpaTransactionManager">
+        <property name="entityManagerFactory" ref="entityManagerFactory"/>
+    </bean>
+
+    <!-- 开启事务注解 -->
+    <tx:annotation-driven transaction-manager="transactionManager"/>
+    <!-- dao扫描.repository-impl-postfix="Impl"使得可以自动判断谁是对应的实现类-->
+    <jpa:repositories base-package="dao" repository-impl-postfix="Impl" entity-manager-factory-ref="entityManagerFactory" transaction-manager-ref="transactionManager" />
+    <!-- 配置扫描service包 -->
+    <context:component-scan base-package="service"/>
+    <!-- 配置扫描aop包 -->
+    <context:component-scan base-package="aop"/>
+
+    <!-- 配置注解切面 -->
+    <!-- 如果proxy-target-class 属性值被设置为true，那么基于类的代理将起作用（这时需要cglib库） -->
+    <!-- 设置为false或者这个属性被省略，那么标准的JDK 基于接口的代理将起作用 -->
+    <aop:aspectj-autoproxy proxy-target-class="true"/>
+
+    <!--开启这个配置，spring才能识别@Scheduled注解-->
+    <task:annotation-driven/>
+
+    <bean class="utils.ConfigUtil">
+        <property name="picPath" value="${picPath}"></property>
+    </bean>
+</beans>
