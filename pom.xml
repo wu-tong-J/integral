@@ -46,7 +46,7 @@
         <log4j.version>1.2.17</log4j.version>
         <mail.version>1.4.7</mail.version>
         <alibaba.fastjson.version>1.2.40</alibaba.fastjson.version>
-        <commons-io.version>2.6</commons-io.version>
+        <commons-io.version>2.7</commons-io.version>
         <commons-fileupload.version>1.3.3</commons-fileupload.version>
         <jackson-annotations.version>2.9.0</jackson-annotations.version>
         <google-zxing.version>3.4.0</google-zxing.version>
